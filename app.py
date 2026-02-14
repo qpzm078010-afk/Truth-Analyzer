@@ -1,11 +1,11 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
+import json
 
-# تم وضع مفتاحك الجديد هنا
+# الإعدادات
 API_KEY = "AIzaSyCmimhzMPnRrK9G2Dc0gqdJsiaLYlnmNTI"
-
-# إعداد الاتصال ليتخطى الأخطاء القديمة
-genai.configure(api_key=API_KEY, transport='rest')
+# الرابط الرسمي المستقر (v1) لضمان عدم ظهور 404
+API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 st.set_page_config(page_title="Truth Analyzer Pro", layout="wide")
 st.title("🛡️ منصة تحليل المصداقية العلمية")
@@ -14,18 +14,28 @@ user_input = st.text_area("أدخل النص المراد فحصه علمياً:
 
 if st.button("🚀 بدء التحليل الأكاديمي"):
     if user_input:
-        with st.spinner('🤖 جاري التحليل عبر Gemini 1.5 Flash...'):
+        with st.spinner('🤖 جاري الاتصال المباشر بمحرك جوجل...'):
             try:
-                # نستخدم الموديل المستقر والأسرع
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(f"حلل مصداقية هذا النص بالعربية: {user_input}")
+                # تجهيز البيانات للإرسال اليدوي
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": f"حلل مصداقية هذا النص بالعربية باختصار: {user_input}"}]
+                    }]
+                }
+                headers = {'Content-Type': 'application/json'}
                 
-                if response.text:
+                # إرسال الطلب
+                response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+                result = response.json()
+                
+                # استخراج النص من الإجابة المعقدة
+                if response.status_code == 200:
+                    answer = result['candidates'][0]['content']['parts'][0]['text']
                     st.success("✅ تم التحليل بنجاح!")
-                    st.markdown(response.text)
+                    st.markdown(answer)
                 else:
-                    st.error("لم يتمكن النظام من صياغة رد، حاول مرة أخرى.")
+                    st.error(f"خطأ من جوجل: {result.get('error', {}).get('message', 'خطأ غير معروف')}")
             except Exception as e:
-                st.error(f"عذراً، حدث خطأ: {e}")
+                st.error(f"فشل الاتصال: {e}")
     else:
-        st.warning("يرجى إدخال محتوى للفحص.")
+        st.warning("يرجى إدخال محتوى.")
