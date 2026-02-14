@@ -1,13 +1,12 @@
 import streamlit as st
 import google.generativeai as genai
 
-# الإعدادات الأساسية
+# تم وضع مفتاحك الجديد هنا
 API_KEY = "AIzaSyCmimhzMPnRrK9G2Dc0gqdJsiaLYlnmNTI"
 
-# السر هنا: إجبار المكتبة على استخدام الإصدار المستقر v1 وتجنب v1beta
+# إعداد الاتصال ليتخطى الأخطاء القديمة
 genai.configure(api_key=API_KEY, transport='rest')
 
-# تصميم الواجهة
 st.set_page_config(page_title="Truth Analyzer Pro", layout="wide")
 st.title("🛡️ منصة تحليل المصداقية العلمية")
 
@@ -15,24 +14,18 @@ user_input = st.text_area("أدخل النص المراد فحصه علمياً:
 
 if st.button("🚀 بدء التحليل الأكاديمي"):
     if user_input:
-        with st.spinner('🤖 جاري التحليل عبر محرك Gemini v1 المستقر...'):
+        with st.spinner('🤖 جاري التحليل عبر Gemini 1.5 Flash...'):
             try:
-                # نستخدم الموديل باسمه المباشر لضمان الاتصال
+                # نستخدم الموديل المستقر والأسرع
                 model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(f"حلل مصداقية هذا النص بالعربية: {user_input}")
                 
-                # إرسال الطلب
-                response = model.generate_content(f"حلل مصداقية هذا النص بالعربية باختصار: {user_input}")
-                
-                st.success("✅ تم التحليل بنجاح!")
-                st.markdown(f"### النتيجة:\n{response.text}")
-                
+                if response.text:
+                    st.success("✅ تم التحليل بنجاح!")
+                    st.markdown(response.text)
+                else:
+                    st.error("لم يتمكن النظام من صياغة رد، حاول مرة أخرى.")
             except Exception as e:
-                # محاولة أخيرة بمسار بديل إذا فشل الأول
-                try:
-                    model_alt = genai.GenerativeModel('models/gemini-1.5-flash')
-                    response = model_alt.generate_content(user_input)
-                    st.write(response.text)
-                except:
-                    st.error(f"خطأ في الاتصال: {e}")
+                st.error(f"عذراً، حدث خطأ: {e}")
     else:
-        st.warning("يرجى إدخال محتوى أولاً.")
+        st.warning("يرجى إدخال محتوى للفحص.")
