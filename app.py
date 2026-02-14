@@ -2,11 +2,13 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- إعدادات المحرك الذكي ---
-# تم وضع مفتاحك الخاص هنا مباشرة
+# مفتاحك الذي استخرجناه سابقاً
 API_KEY = "AIzaSyCmimhzMPnRrK9G2Dc0gqdJsiaLYlnmNTI" 
 
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+
+# تم تغيير الموديل إلى gemini-pro لضمان التوافق التام
+model = genai.GenerativeModel('gemini-pro')
 
 # --- تصميم الواجهة الاحترافية ---
 st.set_page_config(page_title="Truth Analyzer Pro", layout="wide")
@@ -17,7 +19,7 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
     .stButton>button { background: linear-gradient(45deg, #007bff, #00d4ff); color: white; border-radius: 12px; height: 3.5em; width: 100%; border: none; font-weight: bold; }
     .main-box { background-color: #ffffff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-right: 10px solid #007bff; }
-    .report-card { background-color: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px solid #e9ecef; color: #333; }
+    .report-card { background-color: #f8f9fa; padding: 20px; border-radius: 15px; border: 1px solid #e9ecef; color: #333; line-height: 1.6; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -31,25 +33,20 @@ with st.container():
         if user_input:
             with st.spinner('🤖 يقوم الذكاء الاصطناعي الآن بتمحيص البيانات ومطابقتها مع الحقائق العلمية...'):
                 try:
-                    # صياغة الأمر العلمي
-                    prompt = f"""
-                    قم بتحليل هذا المحتوى كباحث أكاديمي خبير: {user_input}
-                    أريد تقريراً باللغة العربية يتضمن:
-                    1. **نسبة المصداقية (0-100%)**: بناءً على موثوقية المصدر.
-                    2. **تحليل المغالطات**: رصد أي مغالطات منطقية.
-                    3. **المنطق العلمي**: هل يتفق هذا الكلام مع الحقائق العلمية؟
-                    4. **توصية نهائية**: نصيحة للمشاهد بخصوص تصديق هذا المحتوى.
-                    """
+                    # صياغة الأمر العلمي لـ Gemini
+                    prompt = f"قم بتحليل هذا المحتوى كباحث أكاديمي خبير: {user_input}. أريد تقريراً باللغة العربية يتضمن: 1. نسبة المصداقية (0-100%). 2. تحليل المغالطات المنطقية. 3. المنطق العلمي ومدى مطابقة الحقائق. 4. توصية نهائية للقارئ."
+                    
                     response = model.generate_content(prompt)
                     
                     st.divider()
-                    st.success("✅ اكتمل التحليل الأكاديمي")
+                    st.success("✅ اكتمل التحليل الأكاديمي بنجاح")
                     
                     st.subheader("📝 التقرير التحليلي المفصل")
                     st.markdown(f'<div class="report-card">{response.text}</div>', unsafe_allow_html=True)
                         
                 except Exception as e:
                     st.error(f"حدث خطأ في الاتصال بالخدمة: {e}")
+                    st.info("تلميح: تأكد من أن مفتاح الـ API مفعل في Google AI Studio.")
         else:
             st.warning("⚠️ يرجى تزويد النظام ببيانات للتحليل.")
     st.markdown('</div>', unsafe_allow_html=True)
